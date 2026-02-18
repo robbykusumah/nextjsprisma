@@ -56,7 +56,7 @@ export default async function AdminProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {products.map((product, index) => (
+            {products.map((product: any, index: number) => (
               <tr key={product.id} className="hover">
                 <td>{index + 1}</td>
                 <td>{product.title}</td>
