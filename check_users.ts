@@ -1,0 +1,14 @@
+import prisma from "./prisma/client"
+
+async function main() {
+  try {
+    const users = await prisma.user.findMany()
+    console.log("Users in DB:", JSON.stringify(users, null, 2))
+  } catch (error) {
+    console.error("Error fetching users:", error)
+  } finally {
+    // await prisma.$disconnect() // Connection is managed by the pool in client.ts
+  }
+}
+
+main()
