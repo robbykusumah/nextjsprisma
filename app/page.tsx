@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Zap, ShieldCheck, Users } from "lucide-react";
 
 export default function Home() {
   return (
@@ -22,24 +23,32 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-          <div className="card bg-base-100 shadow-sm border border-base-200">
+          <div className="card bg-base-100 shadow-xl border border-base-200 transition-all hover:-translate-y-1 hover:shadow-2xl">
             <div className="card-body">
-              <h3 className="card-title text-primary">⚡ Real-time Update</h3>
-              <p className="text-base-content/70">Data stok selalu mutakhir. Tidak ada lagi selisih hitungan.</p>
+              <div className="p-3 bg-primary/10 w-fit rounded-lg mb-2">
+                <Zap className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="card-title text-neutral">Real-time Update</h3>
+              <p className="text-base-content/70">Data stok selalu mutakhir. Tidak ada lagi selisih hitungan saat transaksi.</p>
             </div>
           </div>
-          <div className="card bg-base-100 shadow-sm border border-base-200">
+          <div className="card bg-base-100 shadow-xl border border-base-200 transition-all hover:-translate-y-1 hover:shadow-2xl">
             <div className="card-body">
-              <h3 className="card-title text-secondary">🛡️ Aman & Terpercaya</h3>
-              <p className="text-base-content/70">Didukung database cloud yang aman dengan backup otomatis.</p>
+              <div className="p-3 bg-secondary/10 w-fit rounded-lg mb-2">
+                 <ShieldCheck className="w-8 h-8 text-secondary" />
+              </div>
+              <h3 className="card-title text-neutral">Aman & Terpercaya</h3>
+              <p className="text-base-content/70">Didukung database cloud yang aman dengan backup otomatis setiap hari.</p>
             </div>
           </div>
-          <div className="card bg-base-100 shadow-sm border border-base-200">
+          <div className="card bg-base-100 shadow-xl border border-base-200 transition-all hover:-translate-y-1 hover:shadow-2xl">
             <div className="card-body">
-              <h3 className="card-title text-accent">👥 Multi-User</h3>
-              <p className="text-base-content/70">Kolaborasi tim mulus. Pantau siapa yang input data.</p>
+              <div className="p-3 bg-accent/10 w-fit rounded-lg mb-2">
+                <Users className="w-8 h-8 text-accent" />
+              </div>
+              <h3 className="card-title text-neutral">Multi-User</h3>
+              <p className="text-base-content/70">Kolaborasi tim mulus. Pantau siapa yang input data dengan log admin.</p>
             </div>
           </div>
         </div>
