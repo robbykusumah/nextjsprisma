@@ -23,9 +23,11 @@ export const POST = async (request: Request) => {
             }
         });
         return NextResponse.json(product, {status: 201});
-    } catch (error) {
+    } catch (error: any) {
         console.error("CREATE PRODUCT ERROR:", error);
-        return NextResponse.json({ error: "Database error during creation" }, { status: 500 });
+        return NextResponse.json({ 
+            error: `DB Error: ${error.message || error.code || "Unknown"}` 
+        }, { status: 500 });
     }
 }
 
