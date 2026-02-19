@@ -18,9 +18,6 @@ export default function Home() {
           <Link href="/products" className="btn btn-primary btn-wide text-lg font-normal py-3 h-auto shadow-none rounded-none hover:bg-primary-focus transition-colors">
             Mulai Kelola
           </Link>
-          <Link href="/admin/users" className="btn btn-ghost btn-wide text-lg font-normal py-3 h-auto hover:bg-transparent hover:underline rounded-none">
-            Lihat Demo Admin →
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
