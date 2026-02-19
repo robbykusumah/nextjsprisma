@@ -67,12 +67,30 @@ const Products = async (props: { searchParams: Promise<{ query?: string, page?: 
     const query = searchParams.query || "";
     const currentPage = Number(searchParams.page) || 1;
     
+    // Auth & Permissions
     const session = await auth();
     const isAdmin = session?.user?.role === "ADMIN";
     const userId = session?.user?.id;
     
-    // Pass sorting/filtering params
-    const [{ products, totalPages }, brands] = await Promise.all([getProducts(userId, isAdmin, query, currentPage), getBrands()]); 
+    // Fetch Data
+    const [{ products, totalPages }, brands] = await Promise.all([
+        getProducts(userId, isAdmin, query, currentPage), 
+        getBrands()
+    ]);
+    
+    // If no brands, database likely needs seeding
+    if (brands.length === 0 && isAdmin) {
+        return (
+            <div className="p-10 text-center">
+                <h2 className="text-2xl font-bold mb-4">Database Empty or Not Seeded</h2>
+                <p className="mb-4">No brands found. You need to seed the database first to add products.</p>
+                <a href="/api/seed" target="_blank" className="btn btn-primary">
+                    Seed Database (Click & Wait)
+                </a>
+                <p className="mt-2 text-sm text-gray-500">After seeing "Seeding successful", refresh this page.</p>
+            </div>
+        );
+    } 
 
   return (
     <div className="p-10"> 
