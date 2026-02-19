@@ -18,43 +18,43 @@ const getProducts = async (userId: string | undefined, isAdmin: boolean, query: 
         return { products: [], totalPages: 0 };
     }
     
-    // Explicitly check for userId existence before creating where clause
-    const whereClause: Prisma.ProductWhereInput = {
-        AND: [
-            isAdmin ? {} : { userId: userId },
-            query ? { title: { contains: query, mode: 'insensitive' } } : {}
-        ]
-    };
+    try {
+        // Explicitly check for userId existence before creating where clause
+        const whereClause: Prisma.ProductWhereInput = {
+            AND: [
+                isAdmin ? {} : { userId: userId },
+                query ? { title: { contains: query, mode: 'insensitive' } } : {}
+            ]
+        };
 
-    const itemsPerPage = 5;
-    const skip = (currentPage - 1) * itemsPerPage;
-    
-    const [products, count] = await prisma.$transaction([
-        prisma.product.findMany({
-            where: whereClause,
-            skip: skip,
-            take: itemsPerPage,
-            select:{
-                id:true,
-                title:true,
-                price:true,
-                stock:true,
-                brandId:true,
-                brand:true,
-                user: {
-                    select: {
-                        name: true,
-                        email: true
+        const itemsPerPage = 5;
+        const skip = (currentPage - 1) * itemsPerPage;
+        
+        const [products, count] = await prisma.$transaction([
+            prisma.product.findMany({
+                where: whereClause,
+                skip: skip,
+                take: itemsPerPage,
+                include: {
+                    brand: true, // Ensure brand is included
+                    user: {
+                        select: {
+                            name: true,
+                            email: true
+                        }
                     }
                 }
-            }
-        }),
-        prisma.product.count({ where: whereClause })
-    ]);
+            }),
+            prisma.product.count({ where: whereClause })
+        ]);
 
-    const totalPages = Math.ceil(count / itemsPerPage);
+        const totalPages = Math.ceil(count / itemsPerPage);
 
-    return { products, totalPages };
+        return { products, totalPages };
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        return { products: [], totalPages: 0 }; // Return empty safety fallback
+    }
 }
 
 const getBrands = async () => {
@@ -102,7 +102,7 @@ const Products = async (props: { searchParams: Promise<{ query?: string, page?: 
                         <td>{product.title}</td>
                         <td>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}</td>
                         <td>{product.stock}</td>
-                        <td>{product.brand.name}</td>
+                        <td>{product.brand?.name || "No Brand"}</td>
                         {isAdmin && <td>{product.user?.name || product.user?.email || "-"}</td>}
                         <td className="flex justify-center gap-2">
                             <DeleteProduct product={product}/>
