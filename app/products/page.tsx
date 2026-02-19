@@ -6,6 +6,7 @@ import DeleteProduct from "./deleteProduct";
 import UpdateProduct from "./updateProduct";
 import Search from "@/components/Search";
 import Pagination from "@/components/Pagination";
+import { Suspense } from "react";
 
 import { Prisma } from "@prisma/client";
 
@@ -75,7 +76,9 @@ const Products = async (props: { searchParams: Promise<{ query?: string, page?: 
     <div className="p-10"> 
         <div className="mb-2 flex justify-between items-center gap-4">
             <AddProduct brands={brands}/>
-            <Search />
+            <Suspense fallback={<div>Loading search...</div>}>
+                <Search />
+            </Suspense>
             <Link href="/" className="btn btn-outline btn-sm">Home</Link>
         </div>
         <table className="table w-full">
@@ -109,7 +112,9 @@ const Products = async (props: { searchParams: Promise<{ query?: string, page?: 
         </table>
 
         <div className="flex justify-center mt-4">
-            <Pagination totalPages={totalPages} />
+            <Suspense fallback={<div>Loading pagination...</div>}>
+                <Pagination totalPages={totalPages} />
+            </Suspense>
         </div>
     </div>
   )
