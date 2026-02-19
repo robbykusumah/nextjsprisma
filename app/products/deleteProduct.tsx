@@ -3,6 +3,7 @@ import { useState} from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { type Brand } from "@prisma/client";
+import { useToast } from "@/components/ToastProvider";
 
 type Product = {
     id: number;
@@ -15,6 +16,7 @@ const DeleteProduct = ({product}: {product: Product}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+    const { showToast } = useToast();
 
     const handleDelete = async (productId: number) => {
         setIsLoading(true);
@@ -22,8 +24,10 @@ const DeleteProduct = ({product}: {product: Product}) => {
             await axios.delete(`/api/products/${productId}`);
             router.refresh();
             setIsOpen(false);
+            showToast("Product deleted successfully!", "info");
         } catch (error) {
             console.error("Error deleting product:", error);
+            showToast("Failed to delete product.", "error");
         } finally {
             setIsLoading(false);
         }

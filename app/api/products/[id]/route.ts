@@ -13,6 +13,7 @@ export const PATCH= async (request: Request, {params}: {params: Promise<{id: str
         data: {
             title: body.title,
             price: body.price,
+            stock: body.stock,
             brandId: body.brandId,
         }
     });

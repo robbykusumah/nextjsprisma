@@ -8,7 +8,7 @@ export default async function Navbar() {
   return (
     <div className="navbar bg-base-100 shadow-md mb-4 px-4 sm:px-8 border-b border-base-200">
       <div className="navbar-start">
-        <Link href="/" className="btn btn-ghost text-xl font-bold text-primary tracking-wide">NextPrismaJS</Link>
+        <Link href="/" className="btn btn-ghost text-xl font-bold tracking-tight text-neutral">Stock<span className="text-primary">Pilot</span></Link>
       </div>
       
       {/* Mobile Dropdown (Optional, keeping simple for now) */}

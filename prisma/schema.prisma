@@ -27,6 +27,7 @@ model Product {
   price Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  stock Int @default(0)
   brandId Int
   brand Brand @relation(fields: [brandId], references: [id])
   userId String?

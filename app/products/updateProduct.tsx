@@ -3,20 +3,24 @@ import { useState, SyntheticEvent } from "react";
 import { Brand } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useToast } from "@/components/ToastProvider";
 
 type Product = {
     id: number;
     title: string;
     price: number;
+    stock: number;
     brandId: number;
 } 
 
 const UpdateProduct = ({brands, product}: {brands: Brand[]; product: Product}) => {
     const [title, setTitle] = useState(product.title);
     const [price, setPrice] = useState(product.price);
+    const [stock, setStock] = useState(product.stock);
     const [brand, setBrand] = useState(product.brandId);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const { showToast } = useToast();
 
     const router = useRouter();
 
@@ -27,12 +31,15 @@ const UpdateProduct = ({brands, product}: {brands: Brand[]; product: Product}) =
             await axios.patch(`/api/products/${product.id}`, {
                 title: title,
                 price: Number(price),
+                stock: Number(stock),
                 brandId: Number(brand),
             })
             router.refresh();
             setIsOpen(false);
+            showToast("Product updated successfully!", "success");
         } catch (error) {
             console.error("Error updating product:", error);
+            showToast("Failed to update product.", "error");
         } finally {
             setIsLoading(false);
         }
@@ -63,6 +70,14 @@ const UpdateProduct = ({brands, product}: {brands: Brand[]; product: Product}) =
                         onChange={(e) => setPrice(Number(e.target.value))}
                         className="input input-bordered w-full" 
                         placeholder="Price"/>
+                    </div>
+                    <div className="form-control w-full">
+                        <label className="label font-bold">Stock</label>
+                        <input type="number" 
+                        value={stock}
+                        onChange={(e) => setStock(Number(e.target.value))}
+                        className="input input-bordered w-full" 
+                        placeholder="Stock Quantity"/>
                     </div>
                                         <div className="form-control w-full">
                         <label className="label font-bold">Brand</label>

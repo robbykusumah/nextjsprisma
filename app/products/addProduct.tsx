@@ -3,15 +3,18 @@ import { useState, SyntheticEvent } from "react";
 import { Brand } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useToast } from "@/components/ToastProvider";
 
 const AddProduct = ({brands}: {brands: Brand[]}) => {
     const [title, setTitle] = useState("");
     const [price, setPrice] = useState("");
+    const [stock, setStock] = useState("");
     const [brand, setBrand] = useState("");
     const [isOpen, setIsOpen] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
 
+    const { showToast } = useToast();
     const router = useRouter();
 
     const handleSubmit = async (e: SyntheticEvent) => {
@@ -21,16 +24,19 @@ const AddProduct = ({brands}: {brands: Brand[]}) => {
             await axios.post('/api/products', {
                 title: title,
                 price: Number(price),
+                stock: Number(stock),
                 brandId: Number(brand),
             })
             setTitle("");
             setPrice("");
+            setStock("");
             setBrand("");
             router.refresh();
             setIsOpen(false);
+            showToast("Product added successfully!", "success");
         } catch (error) {
             console.error("Error saving product:", error);
-            // Optional: alert/toast here
+            showToast("Failed to add product.", "error");
         } finally {
             setIsLoading(false);
         }
@@ -61,6 +67,14 @@ const AddProduct = ({brands}: {brands: Brand[]}) => {
                         onChange={(e) => setPrice(e.target.value)}
                         className="input input-bordered w-full" 
                         placeholder="Price"/>
+                    </div>
+                    <div className="form-control w-full">
+                        <label className="label font-bold">Stock</label>
+                        <input type="number" 
+                        value={stock}
+                        onChange={(e) => setStock(e.target.value)}
+                        className="input input-bordered w-full" 
+                        placeholder="Stock Quantity"/>
                     </div>
                                         <div className="form-control w-full">
                         <label className="label font-bold">Brand</label>
