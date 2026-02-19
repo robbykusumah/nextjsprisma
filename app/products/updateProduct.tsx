@@ -26,13 +26,23 @@ const UpdateProduct = ({brands, product}: {brands: Brand[]; product: Product}) =
 
     const handleUpdate = async (e: SyntheticEvent) => {
         e.preventDefault();
+
+        const priceNum = Number(price);
+        const stockNum = Number(stock);
+        const brandNum = Number(brand);
+
+        if (isNaN(priceNum) || isNaN(stockNum) || !brandNum) {
+            showToast("Invalid input. Please select a brand and check numbers.", "error");
+            return;
+        }
+
         setIsLoading(true);
         try {
             await axios.patch(`/api/products/${product.id}`, {
                 title: title,
-                price: Number(price),
-                stock: Number(stock),
-                brandId: Number(brand),
+                price: priceNum,
+                stock: stockNum,
+                brandId: brandNum,
             })
             router.refresh();
             setIsOpen(false);
