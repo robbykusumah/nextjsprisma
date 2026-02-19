@@ -10,6 +10,8 @@ import { Suspense } from "react";
 
 import { Prisma } from "@prisma/client";
 
+export const dynamic = 'force-dynamic';
+
 const getProducts = async (userId: string | undefined, isAdmin: boolean, query: string, currentPage: number) => {
     // If not admin and no user ID, return empty list (or handle appropriately)
     if (!isAdmin && !userId) {
