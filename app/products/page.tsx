@@ -1,16 +1,31 @@
 import Link from "next/link";
 import prisma from "@/prisma/client";
+import { auth } from "@/auth";
+import AddProduct from "./addProduct";
+import DeleteProduct from "./deleteProduct";
+import UpdateProduct from "./updateProduct";
 import Search from "@/components/Search";
 import Pagination from "@/components/Pagination";
+import UserFilter from "@/components/UserFilter";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
 
-const getPublicProducts = async (query: string, currentPage: number) => {
+const getProducts = async (userId: string | undefined, isAdmin: boolean, query: string, currentPage: number, filterUserId?: string) => {
     try {
-        const whereClause: Prisma.ProductWhereInput = query ? { title: { contains: query, mode: 'insensitive' } } : {};
-        const itemsPerPage = 8; // More items for grid view
+        // Core Logic: 
+        // 1. If Admin: Show all, unless filtered by specific user.
+        // 2. If User: Show ONLY their own products (ignore filter params).
+        const whereClause: Prisma.ProductWhereInput = {
+            AND: [
+                isAdmin ? (filterUserId ? { userId: filterUserId } : {}) : { userId: userId },
+                query ? { title: { contains: query, mode: 'insensitive' } } : {}
+            ]
+        };
+
+        const itemsPerPage = 5;
         const skip = (currentPage - 1) * itemsPerPage;
         
         const [products, count] = await prisma.$transaction([
@@ -18,7 +33,10 @@ const getPublicProducts = async (query: string, currentPage: number) => {
                 where: whereClause,
                 skip: skip,
                 take: itemsPerPage,
-                include: { brand: true },
+                include: {
+                    brand: true,
+                    user: { select: { name: true, email: true } }
+                },
                 orderBy: { createdAt: 'desc' }
             }),
             prisma.product.count({ where: whereClause })
@@ -27,62 +45,126 @@ const getPublicProducts = async (query: string, currentPage: number) => {
         const totalPages = Math.ceil(count / itemsPerPage);
         return { products, totalPages };
     } catch (error) {
-        console.error("Error fetching public products:", error);
+        console.error("Error fetching products:", error);
         return { products: [], totalPages: 0 };
     }
 }
 
-const Products = async (props: { searchParams: Promise<{ query?: string, page?: string }> }) => {
+const getBrands = async () => {
+    return await prisma.brand.findMany();
+}
+
+const getUsers = async () => {
+    return await prisma.user.findMany({
+        select: { id: true, name: true, email: true },
+        orderBy: { name: 'asc' }
+    });
+}
+
+const Products = async (props: { searchParams: Promise<{ query?: string, page?: string, user?: string }> }) => {
     const searchParams = await props.searchParams;
     const query = searchParams.query || "";
     const currentPage = Number(searchParams.page) || 1;
+    const filterUserId = searchParams.user || "";
     
-    const { products, totalPages } = await getPublicProducts(query, currentPage);
+    // Auth Check
+    const session = await auth();
+    if (!session || !session.user?.id) {
+        redirect("/api/auth/signin"); // Redirect if not logged in
+    }
+
+    const isAdmin = session.user.role === "ADMIN";
+    const userId = session.user.id;
+    
+    // Fetch Data
+    const [{ products, totalPages }, brands, users] = await Promise.all([
+        getProducts(userId, isAdmin, query, currentPage, filterUserId), 
+        getBrands(),
+        isAdmin ? getUsers() : Promise.resolve([]) // Only fetch users if Admin
+    ]);
+    
+    // Seed Prompt (Only for Admin if DB is empty)
+    if (brands.length === 0 && isAdmin) {
+        return (
+            <div className="p-10 text-center">
+                <h2 className="text-2xl font-bold mb-4">Database Empty or Not Seeded</h2>
+                <p className="mb-4">No brands found. Please seed the database.</p>
+                <a href="/api/seed" target="_blank" className="btn btn-primary">Seed Database</a>
+            </div>
+        );
+    } 
 
   return (
-    <div className="container mx-auto p-10"> 
-        <div className="mb-8 text-center">
-            <h1 className="text-4xl font-bold mb-2">Our Collection</h1>
-            <p className="text-gray-500">Find the best products curated just for you</p>
+    <div className="container mx-auto p-4 sm:p-10"> 
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-800">
+                {isAdmin ? "Product Management" : "My Products"}
+            </h1>
         </div>
 
-        <div className="mb-6 flex justify-center max-w-md mx-auto">
-            <Suspense fallback={<div>Loading search...</div>}>
-                <Search />
-            </Suspense>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product: any) => (
-                <div key={product.id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow border border-base-200">
-                    <figure className="px-10 pt-10 min-h-[200px] bg-base-200 flex items-center justify-center">
-                        {/* Placeholder for Product Image */}
-                        <span className="text-6xl">📦</span>
-                    </figure>
-                    <div className="card-body items-center text-center">
-                        <div className="badge badge-secondary mb-2">{product.brand?.name}</div>
-                        <h2 className="card-title">{product.title}</h2>
-                        <p className="text-2xl font-bold text-primary">
-                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}
-                        </p>
-                        <div className="card-actions mt-4">
-                            <button className="btn btn-primary btn-sm">Add to Cart</button>
-                        </div>
-                         <div className="text-xs text-gray-400 mt-2">
-                            Stock: {product.stock}
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
-        
-        {products.length === 0 && (
-            <div className="text-center py-20">
-                <h3 className="text-xl text-gray-500">No products found matching your search.</h3>
+        <div className="mb-4 flex flex-col lg:flex-row justify-between items-center gap-4 bg-base-100 p-4 rounded-lg shadow-sm border border-base-200">
+            <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
+                <AddProduct brands={brands}/>
+                {isAdmin && (
+                    <Suspense fallback={<div className="loading loading-spinner loading-xs"></div>}>
+                         <UserFilter users={users} />
+                    </Suspense>
+                )}
             </div>
-        )}
+            
+            <div className="flex gap-2 items-center w-full lg:w-auto">
+                <Suspense fallback={<div className="loading loading-spinner loading-xs"></div>}>
+                    <Search />
+                </Suspense>
+            </div>
+        </div>
 
-        <div className="flex justify-center mt-10">
+        <div className="overflow-x-auto bg-base-100 shadow-xl rounded-box border border-base-200">
+            <table className="table w-full">
+                <thead className="bg-base-200">
+                    <tr>
+                        <th>#</th>
+                        <th>Product Name</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Brand</th>
+                        {isAdmin && <th>Created By</th>}
+                        <th className="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {products.map((product: any, index: number) => (
+                        <tr key={product.id} className="hover">
+                            <td>{index + 1}</td>
+                            <td>
+                                <div className="font-bold">{product.title}</div>
+                            </td>
+                            <td>{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}</td>
+                            <td>
+                                <div className={`badge ${product.stock > 0 ? 'badge-info gap-2' : 'badge-error gap-2'}`}>
+                                    {product.stock}
+                                </div>
+                            </td>
+                            <td>{product.brand?.name || "No Brand"}</td>
+                            {isAdmin && <td>{product.user?.name || product.user?.email || "-"}</td>}
+                            <td className="flex justify-center gap-2">
+                                <DeleteProduct product={product}/>
+                                <UpdateProduct brands={brands} product={product}/>
+                            </td>
+                        </tr>
+                    ))}
+                    {products.length === 0 && (
+                        <tr>
+                            <td colSpan={isAdmin ? 7 : 6} className="text-center py-8 text-gray-500">
+                                No products found. {isAdmin ? "Clear filters or add one." : "Start by adding a product!"}
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+
+        <div className="flex justify-center mt-6">
             <Suspense fallback={<div>Loading pagination...</div>}>
                 <Pagination totalPages={totalPages} />
             </Suspense>

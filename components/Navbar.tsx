@@ -28,7 +28,6 @@ export default async function Navbar() {
                         <div tabIndex={0} role="button" className="btn btn-sm btn-secondary">Admin ▾</div>
                         <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-48">
                             <li><Link href="/admin/users">Kelola Pengguna</Link></li>
-                            <li><Link href="/admin/products">Kelola Produk</Link></li>
                         </ul>
                     </div>
                 )}
