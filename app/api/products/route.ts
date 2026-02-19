@@ -11,15 +11,21 @@ export const POST = async (request: Request) => {
     }
 
     const body: Product = await request.json();
-    const product = await prisma.product.create({
-        data: {
-            title: body.title,
-            price: body.price,
-            stock: body.stock,
-            brandId: body.brandId,
-            userId: session.user.id,
-        }
-    });
-    return NextResponse.json(product, {status: 201});
+    
+    try {
+        const product = await prisma.product.create({
+            data: {
+                title: body.title,
+                price: body.price,
+                stock: body.stock,
+                brandId: body.brandId,
+                userId: session.user.id,
+            }
+        });
+        return NextResponse.json(product, {status: 201});
+    } catch (error) {
+        console.error("CREATE PRODUCT ERROR:", error);
+        return NextResponse.json({ error: "Database error during creation" }, { status: 500 });
+    }
 }
 

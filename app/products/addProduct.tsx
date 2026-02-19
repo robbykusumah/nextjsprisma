@@ -44,9 +44,10 @@ const AddProduct = ({brands}: {brands: Brand[]}) => {
             router.refresh();
             setIsOpen(false);
             showToast("Product added successfully!", "success");
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving product:", error);
-            showToast("Failed to add product.", "error");
+            const errorMessage = error.response?.data?.error || error.message || "Failed to add product.";
+            showToast(`Failed: ${errorMessage}`, "error");
         } finally {
             setIsLoading(false);
         }
